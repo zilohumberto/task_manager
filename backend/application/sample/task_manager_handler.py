@@ -74,7 +74,7 @@ async def hear_new_tasks():
                     instance=task_instance, 
                     name=new_task,
                     start_time=datetime.utcnow(),
-                    uuid=uuid4(),
+                    _id=uuid4(),
                 ))
             else:
                 print("Invalid task", task_func)
