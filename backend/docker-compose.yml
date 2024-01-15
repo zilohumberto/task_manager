@@ -1,0 +1,63 @@
+version: "3.6"
+
+x-common:
+  &common
+  environment:
+    &common-env
+    ENV_NAME: local
+    FLASK_DEBUG: 1
+    FLASK_ENV: local
+    FLASK_APP: "/app/code/app.py"
+    IN_DOCKER_CONTAINER: 1
+  depends_on:
+    postgres:
+        condition: service_healthy
+
+  build:
+    &common-build-context
+    context: .
+  healthcheck:
+    &common-healthcheck-timing
+    interval: 30s
+    timeout: 10s
+    retries: 5
+
+x-app-vol: &app-vol
+  "./:/app/code"
+
+
+services:
+  tests:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: tests
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
+    platform: linux/amd64
+
+  api:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: api
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
+    ports:
+      - "5100:5000"
+    healthcheck:
+      <<: *common-healthcheck-timing
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/ping"]
+    platform: linux/amd64
+
+
+networks:
+  local_net:
+    name: local_net
+    driver: bridge
