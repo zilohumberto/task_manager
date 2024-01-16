@@ -1,5 +1,7 @@
 from time import sleep
+from application.services.queue.handler import task
 
 
-def wait_5s():
+@task(task_name="wait_5s")
+async def wait_5s():
     sleep(5)

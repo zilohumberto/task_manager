@@ -11,8 +11,8 @@ class TaskStatus(Enum):
 
 
     """
-    CREATED: 1
-    RUNNING: 2
-    CANCELLED: 3
-    FAILED: 4  # TBD: unused, how to handle errors?
-    DONE: 5
+    CREATED = 1
+    RUNNING = 2
+    CANCELLED = 3
+    FAILED = 4  # TBD: unused, how to handle errors?
+    DONE = 5

@@ -1,20 +1,22 @@
 from typing import Optional, Sequence
 
-from backend.application.models.models import Task
+from application.models.models import db
+
+Model = db.Model
 
 
 class BaseRepository:
-    def get(self) -> Optional[Task]:
+    def get(self, pk: str) -> Optional[Model]:
         raise NotImplementedError()
 
-    def create(self) -> Optional[Task]:
+    def create(self, obj: Model) -> Optional[Model]:
         raise NotImplementedError()
 
-    def filter(self, **kwargs) -> Sequence[Task]:
+    def filter(self, **kwargs) -> Sequence[Model]:
         raise NotImplementedError()
 
     def delete(self, **kwargs):
         raise NotImplementedError()
 
-    def is_empty(self):
+    def save(self, obj: Model):
         raise NotImplementedError()
