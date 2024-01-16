@@ -7,6 +7,8 @@ from application.repositories.persistance.task_db_repository import TaskDBReposi
 
 task_service = TaskService(
     task_repository=TaskDBRepository(),
+    AWS_SQS_REGION_NAME=app.config.get("AWS_SQS_REGION_NAME"),
+    QUEUE_URL=app.config.get("QUEUE_URL"),
 )
 
 
@@ -44,6 +46,6 @@ def retrieve_task(task_id: str):
     """
     task_instance = task_service.get(task_id=task_id)
     if task_instance:
-        return jsonify({"data": task_instance.dict()}), 200
+        return jsonify({"data": task_instance}), 200
     else:
         return jsonify({"message": f"No data for {task_id}"}), 404

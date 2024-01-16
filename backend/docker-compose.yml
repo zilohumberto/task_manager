@@ -9,11 +9,16 @@ x-common:
     FLASK_ENV: local
     FLASK_APP: "/app/code/app.py"
     IN_DOCKER_CONTAINER: 1
+    env_file: .env
     POSTGRES_DB: test_task_manager_db
     POSTGRES_PASSWORD: admin
     POSTGRES_USER: admin
     POSTGRES_HOST: postgres
     POSTGRES_PORT: 5432
+    AWS_SQS_REGION_NAME: '<AWS_SQS_REGION_NAME>'
+    QUEUE_URL: '<QUEUE_URL>'
+    AWS_ACCESS_KEY_ID: '<AWS_ACCESS_KEY_ID>'
+    AWS_SECRET_ACCESS_KEY: '<AWS_SECRET_ACCESS_KEY>'`
   depends_on:
     postgres:
         condition: service_healthy
