@@ -9,7 +9,7 @@ async def create_task(loop, task_func, **kwargs):
 def task(task_name: str):
     def wrapper(func):
         async def async_wrapper(**kwargs):
-            task_id = kwargs.get("task_id")
+            task_id = kwargs.pop("task_id")
             loop = asyncio.get_event_loop()
             listener_task = await create_task(loop, func, **kwargs)
             listener_task.set_name(task_id)

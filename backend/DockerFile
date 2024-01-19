@@ -22,3 +22,6 @@ CMD ["pytest"]
 
 FROM api_deps AS api
 ENTRYPOINT ["./gunicorn.sh"]
+
+FROM api_deps AS task_manager
+CMD ["python", "task_manager.py"]

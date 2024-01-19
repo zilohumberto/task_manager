@@ -38,8 +38,7 @@ class TaskRepository:
     def mark_failed(self, pk: str = None, obj: Task = None):
         raise NotImplementedError()
 
-    @staticmethod
-    def check_timeout(obj: Task) -> bool:
+    def check_timeout(self, obj: Task) -> bool:
         time_difference = datetime.utcnow() - obj.exec_start_time
         if time_difference >= timedelta(seconds=MAX_TIMEOUT_SECONDS):
             # need to cancel due timeout!

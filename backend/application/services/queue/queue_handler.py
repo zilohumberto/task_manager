@@ -14,7 +14,7 @@ class QueueHandler:
     def send(self, body: str):
         response = self.queue.send_message(
             QueueUrl=self.queue_url,
-            DelaySeconds=10,
+            DelaySeconds=1,
             MessageBody=body,
         )
         print("message sent to the queue", response["MessageId"])
@@ -25,7 +25,7 @@ class QueueHandler:
             AttributeNames=["SentTimestamp"],
             MaxNumberOfMessages=10,
             MessageAttributeNames=["All"],
-            VisibilityTimeout=0,
+            VisibilityTimeout=5,
             WaitTimeSeconds=0,
         )
         data = []

@@ -15,10 +15,6 @@ x-common:
     POSTGRES_USER: admin
     POSTGRES_HOST: postgres
     POSTGRES_PORT: 5432
-    AWS_SQS_REGION_NAME: '<AWS_SQS_REGION_NAME>'
-    QUEUE_URL: '<QUEUE_URL>'
-    AWS_ACCESS_KEY_ID: '<AWS_ACCESS_KEY_ID>'
-    AWS_SECRET_ACCESS_KEY: '<AWS_SECRET_ACCESS_KEY>'`
   depends_on:
     postgres:
         condition: service_healthy
@@ -64,6 +60,18 @@ services:
     healthcheck:
       <<: *common-healthcheck-timing
       test: ["CMD", "curl", "--fail", "http://localhost:5000/ping"]
+    platform: linux/amd64
+
+  task_manager:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: task_manager
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
     platform: linux/amd64
 
   postgres:
