@@ -16,9 +16,6 @@ async def consumer():
             queued_tasks = queue_tasks.receive()
             for queued_task in queued_tasks:
                 task_id = queued_task[0]
-                if task_id == 'ABEMARIA':
-                    print("ignoring")
-                    continue
                 task_queue_handler = queued_task[1]
                 print("task getting: ", task_id)
                 task_record = repository.get(pk=task_id)
