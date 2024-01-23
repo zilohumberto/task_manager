@@ -1,0 +1,96 @@
+version: "3.6"
+
+x-common:
+  &common
+  environment:
+    &common-env
+    ENV_NAME: local
+    FLASK_DEBUG: 1
+    FLASK_ENV: local
+    FLASK_APP: "/app/code/app.py"
+    IN_DOCKER_CONTAINER: 1
+    env_file: .env
+    POSTGRES_DB: test_task_manager_db
+    POSTGRES_PASSWORD: admin
+    POSTGRES_USER: admin
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+  depends_on:
+    postgres:
+        condition: service_healthy
+
+  build:
+    &common-build-context
+    context: .
+  healthcheck:
+    &common-healthcheck-timing
+    interval: 30s
+    timeout: 10s
+    retries: 5
+
+x-app-vol: &app-vol
+  "./:/app/code"
+
+
+services:
+  tests:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: tests
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
+    platform: linux/amd64
+
+  api:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: api
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
+    ports:
+      - "5100:5000"
+    healthcheck:
+      <<: *common-healthcheck-timing
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/ping"]
+    platform: linux/amd64
+
+  task_manager:
+    <<: *common
+    build:
+      <<: *common-build-context
+      dockerfile: DockerFile
+      target: task_manager
+    volumes:
+      - *app-vol
+    networks:
+      - local_net
+    platform: linux/amd64
+
+  postgres:
+    image: postgres:alpine
+    environment:
+      <<: *common-env
+    networks:
+      - local_net
+    ports:
+      - 5431:5432
+    restart: on-failure:3
+    healthcheck:
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      test: ["CMD", "psql", "-q", "-h", "localhost", "-U", "admin", "--port", "5432", "-d", "test_task_manager_db", "--command=select\ 1"]
+    platform: linux/amd64
+
+networks:
+  local_net:
+    name: local_net
+    driver: bridge
