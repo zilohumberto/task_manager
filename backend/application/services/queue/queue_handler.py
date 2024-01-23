@@ -1,6 +1,8 @@
 import boto3
 from typing import Sequence, Optional
 
+from settings.default import MAX_TIMEOUT_SECONDS
+
 
 class QueueHandler:
     queue = None
@@ -25,8 +27,8 @@ class QueueHandler:
             AttributeNames=["SentTimestamp"],
             MaxNumberOfMessages=10,
             MessageAttributeNames=["All"],
-            VisibilityTimeout=5,
-            WaitTimeSeconds=0,
+            VisibilityTimeout=MAX_TIMEOUT_SECONDS,
+            WaitTimeSeconds=10,
         )
         data = []
         msgs = response.get("Messages") or []

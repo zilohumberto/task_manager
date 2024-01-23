@@ -1,7 +1,5 @@
 from typing import Optional, Sequence
-from datetime import datetime, timedelta
 
-from settings.default import MAX_TIMEOUT_SECONDS
 from application.models.models import Task
 
 
@@ -37,10 +35,3 @@ class TaskRepository:
 
     def mark_failed(self, pk: str = None, obj: Task = None):
         raise NotImplementedError()
-
-    def check_timeout(self, obj: Task) -> bool:
-        time_difference = datetime.utcnow() - obj.exec_start_time
-        if time_difference >= timedelta(seconds=MAX_TIMEOUT_SECONDS):
-            # need to cancel due timeout!
-            return True
-        return False

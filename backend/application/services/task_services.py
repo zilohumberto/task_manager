@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 from typing import Optional, Sequence
 
 from application.services.queue.queue_handler import QueueHandler
 from application.repositories.persistance.task_repository import TaskRepository
 from application.models.enums import TaskStatus
+from settings.default import MAX_TIMEOUT_SECONDS
 
 
 class TaskService:
@@ -42,3 +43,11 @@ class TaskService:
             return self._row_to_dict(row)
         else:
             return None
+
+    @staticmethod
+    def check_timeout(obj: TaskRepository.model) -> bool:
+        time_difference = datetime.utcnow() - obj.exec_start_time
+        if time_difference >= timedelta(seconds=MAX_TIMEOUT_SECONDS):
+            # need to cancel due timeout!
+            return True
+        return False

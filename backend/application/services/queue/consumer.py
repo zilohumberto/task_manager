@@ -1,4 +1,3 @@
-import asyncio
 from functools import partial
 
 from app import task_service, app
@@ -45,11 +44,6 @@ async def consumer():
                 if task.status == TaskStatus.RUNNING:
                     if task_listener.done():
                         task.mark_done()
-                    elif repository.check_timeout(obj=task):
+                    elif task_service.check_timeout(obj=task):
                         task_listener.cancel()
                         task.mark_cancelled()
-
-            # can we avoid a sleep here using the `block` param in the `queue.get` method.
-            # a sleep results in the system not doing anything if one pass of the loop is
-            # past the `empty` check and a new task arrives after that.
-            await asyncio.sleep(10)
