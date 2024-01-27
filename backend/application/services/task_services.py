@@ -34,7 +34,7 @@ class TaskService:
             start_time=datetime.utcnow()
         )
         task = self.repository.create(obj=task)
-        self.queue_tasks.send(body=str(task.id))
+        self.queue_tasks.send(body=str(task.id), kind="task")
         return task.id
 
     def get(self, task_id: str) -> Optional[dict]:

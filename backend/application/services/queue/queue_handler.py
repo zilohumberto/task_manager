@@ -13,15 +13,18 @@ class QueueHandler:
         self.queue_url = kwargs.get("QUEUE_URL")
         self.queue = boto3.client("sqs", region_name=region_name)
 
-    def send(self, body: str):
+    def send(self, body: str, kind: str = "task", **kwargs):
         response = self.queue.send_message(
             QueueUrl=self.queue_url,
-            DelaySeconds=1,
+            DelaySeconds=1 if kind == "task" else MAX_TIMEOUT_SECONDS,
             MessageBody=body,
+            MessageAttributes={
+                "kind": {"DataType": "String", "StringValue": kind}
+            },
         )
         print("message sent to the queue", response["MessageId"])
 
-    def receive(self) -> Optional[Sequence[tuple]]:
+    def receive(self) -> Optional[Sequence[dict]]:
         response = self.queue.receive_message(
             QueueUrl=self.queue_url,
             AttributeNames=["SentTimestamp"],
@@ -35,7 +38,8 @@ class QueueHandler:
         for msg in msgs:
             receipt_handle = msg["ReceiptHandle"]
             body = msg["Body"]
-            data.append((body, receipt_handle))
+            attrs = {key: value.get("StringValue") for key, value in msg.get("MessageAttributes").items()}
+            data.append(dict(body=body, receipt_handle=receipt_handle, **attrs))
         return data
 
     def delete(self, pk: str):
