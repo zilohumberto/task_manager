@@ -51,10 +51,11 @@ async def consumer():
                                 repository.mark_failed(obj=task_record)
                                 queue_message_done = True
                             else:
+                                is_done = task_listener.done()
                                 logger.info(
-                                    f"Task[{task_record.name}: {task_id}] -> It's done? R: {task_listener.done()}"
+                                    f"Task[{task_record.name}: {task_id}] -> It's done? R: {is_done}"
                                 )
-                                if task_listener.done():
+                                if is_done:
                                     repository.mark_done(obj=task_record)
                                     queue_message_done = True
                                 elif task_service.check_timeout(obj=task_record):
@@ -72,6 +73,9 @@ async def consumer():
                 if queue_message_done:
                     # either task or health_check should be deleted!
                     queue_tasks.delete(task_queue_handler)
+                    # if a health_check task is done with his purpose, the listeners can be deleted
+                    if task_kind == "health_check" and task_id in listeners:
+                        del listeners[task_id]
 
             # currently is needed!
             # somehow the listeners are loosing the track of the task.
