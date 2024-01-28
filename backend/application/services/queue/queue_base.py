@@ -1,4 +1,6 @@
-from typing import Sequence, Optional
+from typing import Sequence
+
+from application.services.queue.models import Message
 
 
 class QueueBase:
@@ -8,11 +10,11 @@ class QueueBase:
     def __init__(self):
         pass
 
-    def send(self, body: str):
+    def send(self, message: Message, **kwargs):
         raise NotImplementedError()
 
-    def receive(self) -> Optional[Sequence[tuple]]:
+    def receive(self) -> Sequence[Message]:
         raise NotImplementedError()
 
-    def delete(self, pk: str):
+    def delete(self, message: Message):
         raise NotImplementedError()
