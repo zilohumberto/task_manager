@@ -1,11 +1,10 @@
 from functools import partial
 from asyncio import sleep
 
-from app import task_service, app
+from app import task_service, app, logging
 from application.services.tasks_definition.tasks import TASK_MAP
 from application.models.enums import TaskStatus
 from application.services.queue.callbacks import finished_callback
-from logger_config import logger
 
 
 async def consumer():
@@ -22,9 +21,9 @@ async def consumer():
                 task_kind = queued_task["kind"]
                 task_record = repository.get(pk=task_id)
                 if task_record is None:
-                    logger.warning(f"Record not found: {task_id}")
+                    logging.warning(f"Record not found: {task_id}")
                     continue
-                logger.info(
+                logging.info(
                     f"task getting[{task_kind}]: {task_record.name} [{task_record.status.name}]-> {task_id}"
                 )
 
@@ -39,20 +38,20 @@ async def consumer():
                         )
                         listeners[task_id] = listener
                         queue_tasks.send(body=str(task_id), kind="health_check")
-                        logger.info(f"sent health_check for {task_record.name}")
+                        logging.info(f"sent health_check for {task_record.name}")
                         queue_message_done = True
                     elif task_kind == "health_check":
                         if task_record.status == TaskStatus.RUNNING:
                             task_listener = listeners.get(task_id)
                             if task_listener is None:
-                                logger.warning(
+                                logging.warning(
                                     f"no listener for tasks {task_kind}:{task_id} - skipping"
                                 )
                                 repository.mark_failed(obj=task_record)
                                 queue_message_done = True
                             else:
                                 is_done = task_listener.done()
-                                logger.info(
+                                logging.info(
                                     f"Task[{task_record.name}: {task_id}] -> It's done? R: {is_done}"
                                 )
                                 if is_done:
@@ -68,7 +67,7 @@ async def consumer():
                         raise ValueError(f"task kind '{task_kind}' is not implemented")
                 else:
                     repository.mark_failed(obj=task_record)
-                    logger.info(f"Invalid task {task_record.name}")
+                    logging.info(f"Invalid task {task_record.name}")
 
                 if queue_message_done:
                     # either task or health_check should be deleted!
