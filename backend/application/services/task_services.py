@@ -3,6 +3,7 @@ from uuid import uuid4
 from typing import Optional, Sequence
 
 from application.services.queue.queue_handler import QueueHandler
+from application.services.queue.models import Message, MessageKind
 from application.repositories.persistance.task_repository import TaskRepository
 from application.models.enums import TaskStatus
 from settings.default import MAX_TIMEOUT_SECONDS
@@ -31,10 +32,12 @@ class TaskService:
             id=uuid4(),
             status=TaskStatus.CREATED,
             name=task_name,
-            start_time=datetime.utcnow()
+            start_time=datetime.utcnow(),
         )
         task = self.repository.create(obj=task)
-        self.queue_tasks.send(body=str(task.id), kind="task")
+        self.queue_tasks.send(
+            message=Message(body=str(task.id), kind=MessageKind.task, delay_seconds=1)
+        )
         return task.id
 
     def get(self, task_id: str) -> Optional[dict]:

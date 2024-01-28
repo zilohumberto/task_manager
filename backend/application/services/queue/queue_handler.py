@@ -1,7 +1,8 @@
 import boto3
-from typing import Sequence, Optional
+from typing import Sequence
 
 from settings.default import MAX_TIMEOUT_SECONDS
+from application.services.queue.models import Message, MessageKind
 
 
 class QueueHandler:
@@ -13,18 +14,18 @@ class QueueHandler:
         self.queue_url = kwargs.get("QUEUE_URL")
         self.queue = boto3.client("sqs", region_name=region_name)
 
-    def send(self, body: str, kind: str = "task", **kwargs):
+    def send(self, message: Message):
         response = self.queue.send_message(
             QueueUrl=self.queue_url,
-            DelaySeconds=1 if kind == "task" else MAX_TIMEOUT_SECONDS,
-            MessageBody=body,
+            DelaySeconds=message.delay_seconds,
+            MessageBody=message.body,
             MessageAttributes={
-                "kind": {"DataType": "String", "StringValue": kind}
+                "kind": {"DataType": "String", "StringValue": message.kind.name}
             },
         )
         print("message sent to the queue", response["MessageId"])
 
-    def receive(self) -> Optional[Sequence[dict]]:
+    def receive(self) -> Sequence[Message]:
         response = self.queue.receive_message(
             QueueUrl=self.queue_url,
             AttributeNames=["SentTimestamp"],
@@ -33,14 +34,19 @@ class QueueHandler:
             VisibilityTimeout=MAX_TIMEOUT_SECONDS,
             WaitTimeSeconds=10,
         )
-        data = []
+        data: list[Message] = []
         msgs = response.get("Messages") or []
         for msg in msgs:
             receipt_handle = msg["ReceiptHandle"]
             body = msg["Body"]
             attrs = {key: value.get("StringValue") for key, value in msg.get("MessageAttributes").items()}
-            data.append(dict(body=body, receipt_handle=receipt_handle, **attrs))
+            try:
+                if "kind" in attrs:
+                    attrs["kind"] = MessageKind[attrs["kind"]]
+            except:
+                pass
+            data.append(Message(body=body, receipt_handle=receipt_handle, **attrs))
         return data
 
-    def delete(self, pk: str):
-        self.queue.delete_message(QueueUrl=self.queue_url, ReceiptHandle=pk)
+    def delete(self, message: Message):
+        self.queue.delete_message(QueueUrl=self.queue_url, ReceiptHandle=message.receipt_handle)
