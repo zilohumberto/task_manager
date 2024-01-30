@@ -2,8 +2,9 @@ import asyncio
 
 
 async def create_task(loop, task_func, **kwargs):
-    listener_task = loop.create_task(task_func(**kwargs))
-    return listener_task
+    async with asyncio.timeout(5) as cm:
+        await task_func(**kwargs)
+    return cm
 
 
 def task(task_name: str):

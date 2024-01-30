@@ -2,7 +2,7 @@ import boto3
 from typing import Sequence
 
 from settings.default import MAX_TIMEOUT_SECONDS
-from application.services.queue.models import Message, MessageKind
+from application.services.queue.models import Message
 
 
 class QueueHandler:
@@ -19,9 +19,7 @@ class QueueHandler:
             QueueUrl=self.queue_url,
             DelaySeconds=message.delay_seconds,
             MessageBody=message.body,
-            MessageAttributes={
-                "kind": {"DataType": "String", "StringValue": message.kind.name}
-            },
+            MessageAttributes={},
         )
         print("message sent to the queue", response["MessageId"])
 
@@ -39,14 +37,10 @@ class QueueHandler:
         for msg in msgs:
             receipt_handle = msg["ReceiptHandle"]
             body = msg["Body"]
-            attrs = {key: value.get("StringValue") for key, value in msg.get("MessageAttributes").items()}
-            try:
-                if "kind" in attrs:
-                    attrs["kind"] = MessageKind[attrs["kind"]]
-            except:
-                pass
-            data.append(Message(body=body, receipt_handle=receipt_handle, **attrs))
+            data.append(Message(body=body, receipt_handle=receipt_handle))
         return data
 
     def delete(self, message: Message):
-        self.queue.delete_message(QueueUrl=self.queue_url, ReceiptHandle=message.receipt_handle)
+        self.queue.delete_message(
+            QueueUrl=self.queue_url, ReceiptHandle=message.receipt_handle
+        )
