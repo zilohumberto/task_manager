@@ -1,19 +1,18 @@
 import asyncio
+from settings.default import MAX_TIMEOUT_SECONDS
 
 
-async def create_task(loop, task_func, **kwargs):
-    listener_task = loop.create_task(task_func(**kwargs))
-    return listener_task
+async def with_timeout(coroutine, timeout, **kwargs):
+    try:
+        result = await asyncio.wait_for(coroutine(**kwargs), timeout=timeout)
+        return result
+    except asyncio.TimeoutError:
+        return -1  # defined timeout as -1
 
 
 def task(task_name: str):
     def wrapper(func):
         async def async_wrapper(**kwargs):
-            task_id = kwargs.pop("task_id")
-            loop = asyncio.get_event_loop()
-            listener_task = await create_task(loop, func, **kwargs)
-            listener_task.set_name(task_id)
-            return listener_task
+            return with_timeout(coroutine=func, timeout=MAX_TIMEOUT_SECONDS, **kwargs)
         return async_wrapper
-
     return wrapper
