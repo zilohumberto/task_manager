@@ -1,5 +1,5 @@
 from asyncio import sleep
-from application.services.queue.handler import task
+from service.tasks.resources import task
 
 
 @task(task_name="wait_1m")
