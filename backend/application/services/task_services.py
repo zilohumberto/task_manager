@@ -2,23 +2,20 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from typing import Optional, Sequence
 
-from application.services.queue.queue_handler import QueueHandler
-from application.services.queue.models import Message, MessageKind
 from application.repositories.persistance.task_repository import TaskRepository
 from application.models.enums import TaskStatus
 from settings.default import MAX_TIMEOUT_SECONDS
+from service.storages.models import Message
+from service.storages.queue_base import QueueBase
 
 
 class TaskService:
     repository: TaskRepository = None
-    queue_tasks = None
+    queue_tasks: QueueBase = None
 
-    def __init__(self, task_repository: TaskRepository, **kwargs):
+    def __init__(self, task_repository: TaskRepository, queue_tasks: QueueBase,  **kwargs):
         self.repository = task_repository
-        self.queue_tasks = QueueHandler(
-            AWS_SQS_REGION_NAME=kwargs.get("AWS_SQS_REGION_NAME"),
-            QUEUE_URL=kwargs.get("QUEUE_URL"),
-        )
+        self.queue_tasks = queue_tasks
 
     def _row_to_dict(self, row: TaskRepository.model) -> dict:
         return dict(id=row.id, status=row.status.name, name=row.name)
@@ -36,7 +33,7 @@ class TaskService:
         )
         task = self.repository.create(obj=task)
         self.queue_tasks.send(
-            message=Message(body=str(task.id), kind=MessageKind.task, delay_seconds=1)
+            message=Message(body=str(task.id), delay_seconds=1)
         )
         return task.id
 

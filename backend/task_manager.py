@@ -1,6 +1,7 @@
 import asyncio
 
-from application.services.queue.consumer import consumer
+from service.workers.worker import Worker
 
 
-asyncio.run(consumer())
+if __name__ == '__main__':
+    asyncio.run(Worker().start())

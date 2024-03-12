@@ -2,31 +2,30 @@ import boto3
 from typing import Sequence
 
 from settings.default import MAX_TIMEOUT_SECONDS, AWS_SQS_REGION_NAME
-from application.services.queue.models import Message
+from service.storages.models import Message
 from service.storages.queue_base import QueueBase
 
 class SQS(QueueBase):
-    queue = None
-    queue_url: str = None
+    _queue = None
+    _queue_url: str = None
 
     def __init__(self, queue_url, **kwargs):
-        super(SQS, self).__init__(queue_url, **kwargs)
-        self.queue = boto3.client("sqs", region_name=AWS_SQS_REGION_NAME)
+        super(SQS, self).__init__(**kwargs)
+        self._queue_url = queue_url
+        self._queue = boto3.client("sqs", region_name=AWS_SQS_REGION_NAME)
 
     def send(self, message: Message, **kwargs):
-        response = self.queue.send_message(
-            QueueUrl=self.queue_url,
+        response = self._queue.send_message(
+            QueueUrl=self._queue_url,
             DelaySeconds=message.delay_seconds,
             MessageBody=message.body,
-            MessageAttributes={
-                "kind": {"DataType": "String", "StringValue": message.kind.name}
-            },
+            MessageAttributes={},
         )
         print("message sent to the queue", response["MessageId"])
 
     def receive(self) -> Sequence[Message]:
-        response = self.queue.receive_message(
-            QueueUrl=self.queue_url,
+        response = self._queue.receive_message(
+            QueueUrl=self._queue_url,
             AttributeNames=["SentTimestamp"],
             MaxNumberOfMessages=10,
             MessageAttributeNames=["All"],
@@ -43,4 +42,4 @@ class SQS(QueueBase):
         return data
 
     def delete(self, message: Message):
-        self.queue.delete_message(QueueUrl=self.queue_url, ReceiptHandle=message.receipt_handle)
+        self._queue.delete_message(QueueUrl=self._queue_url, ReceiptHandle=message.receipt_handle)
