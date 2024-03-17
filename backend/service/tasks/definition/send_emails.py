@@ -1,4 +1,4 @@
-from application.services.queue.handler import task
+from service.tasks.resources import task
 
 
 @task(task_name="send_emails")

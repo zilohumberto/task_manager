@@ -1,6 +1,6 @@
 from math import pi
 
-from application.services.queue.handler import task
+from service.tasks.resources import task
 
 
 @task(task_name="get_pi")

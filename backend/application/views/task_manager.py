@@ -3,12 +3,13 @@ from flask import request, jsonify
 from app import app
 from application.services.task_services import TaskService
 from application.repositories.persistance.task_db_repository import TaskDBRepository
+from settings.default import QUEUE_URL
+from service.storages.sqs import SQS
 
-
+_repository = TaskDBRepository()
 task_service = TaskService(
-    task_repository=TaskDBRepository(),
-    AWS_SQS_REGION_NAME=app.config.get("AWS_SQS_REGION_NAME"),
-    QUEUE_URL=app.config.get("QUEUE_URL"),
+    task_repository=_repository,
+    queue_tasks=SQS(queue_url=QUEUE_URL),
 )
 
 
